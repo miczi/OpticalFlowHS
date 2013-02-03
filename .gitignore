@@ -150,7 +150,7 @@ GeneratedFiles/
 *.depends
 
 #*.dll
-doc_pieciak
+*.tlog
 nbproject
 100.*
 ECG Analyzer.lib
