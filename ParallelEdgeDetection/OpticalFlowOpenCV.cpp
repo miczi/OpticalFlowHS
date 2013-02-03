@@ -23,55 +23,50 @@ int OpticalFlowOpenCV::run()
 
 	cvNamedWindow(FLOW_TITLE, CV_WINDOW_AUTOSIZE);
 	imgTmp = cvQueryFrame(capture);
-	imgOld = cvCreateImage(cvSize(imgTmp->width,imgTmp->height), IPL_DEPTH_8U, 1);
+	imgOld = cvCreateImage(cvGetSize(imgTmp), IPL_DEPTH_8U, 1);
 	cvCvtColor(imgTmp, imgOld, CV_BGR2GRAY);
 	
 	mi();
 	while (1)
 	{
 		imgTmp = cvQueryFrame(capture);
-		imgNew = cvCreateImage(cvSize(imgTmp->width,imgTmp->height), IPL_DEPTH_8U, 1);
+		imgNew = cvCreateImage(cvGetSize(imgTmp), IPL_DEPTH_8U, 1);
 		cvCvtColor(imgTmp, imgNew, CV_BGR2GRAY);
 		
-		IplImage* velx = cvCreateImage(cvGetSize(imgOld),IPL_DEPTH_32F,1); 
-		IplImage* vely = cvCreateImage(cvGetSize(imgOld),IPL_DEPTH_32F,1);
-		IplImage* imgRes = cvCreateImage(cvGetSize(imgOld),IPL_DEPTH_8U,3);
+		IplImage* velx = cvCreateImage(cvGetSize(imgTmp),IPL_DEPTH_32F,1); 
+		IplImage* vely = cvCreateImage(cvGetSize(imgTmp),IPL_DEPTH_32F,1);
 		
 		ms();
 		cvCalcOpticalFlowHS(imgOld, imgNew, 0, velx, vely, .10, cvTermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, imgOld->width, 1e-6));
 		me();
 		
-		cvZero(imgRes);
-		mes();
 		int step = 4;
-		for(int y=0; y<imgRes->height; y += step) 
+		for(int y=0; y<imgTmp->height; y += step) 
 		{
 			float* px = (float*) (velx->imageData + y * velx->widthStep);
 			float* py = (float*) (vely->imageData + y * vely->widthStep);
-			for(int x=0; x<imgRes->width; x += step) 
+			for(int x=0; x<imgTmp->width; x += step) 
 			{
 				if( px[x]>1 && py[x]>1 ) 
 				{
-					cvCircle(imgRes, cvPoint( x, y ), 2, CVX_GRAY50, -1);
-					cvLine(imgRes, cvPoint( x, y ), cvPoint( x+px[x]/2, y+py[x]/2 ), CV_RGB(255,0,0), 1, 0);
+					cvCircle(imgTmp, cvPoint( x, y ), 2, CVX_GRAY50, -1);
+					cvLine(imgTmp, cvPoint( x, y ), cvPoint( x+px[x]/2, y+py[x]/2 ), CV_RGB(255,0,0), 1, 0);
 				}
 			}
 		}
-		cvShowImage(FLOW_TITLE, imgRes);
+		cvShowImage(FLOW_TITLE, imgTmp);
 		cvWaitKey(1);
     
 		cvReleaseImage(&velx);
 		cvReleaseImage(&vely);
 		cvReleaseImage(&imgOld);
-		cvReleaseImage(&imgRes);
+		//cvReleaseImage(&imgTmp);
 		imgOld = imgNew;
 		
 		md();
 		mr();
 		if( cvWaitKey(10) == 27 )
-		{
 			break;
-		}
 	}
 	// destroy windows
 	cvDestroyWindow(FLOW_TITLE);
