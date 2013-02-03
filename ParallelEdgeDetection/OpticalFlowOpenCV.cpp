@@ -1,7 +1,7 @@
 #include "OpticalFlowOpenCV.hpp"
 
-#define CVX_GRAY50 cvScalar(100)
-#define CVX_WHITE  cvScalar(255)
+#define CVX_CIRCLE CV_RGB(0,0,255)
+#define CVX_LINE CV_RGB(255,0,0)
 #define FLOW_TITLE "OpticalFlow"
 
 int OpticalFlowOpenCV::run()
@@ -11,8 +11,8 @@ int OpticalFlowOpenCV::run()
 	IplImage *imgOld;
 	
 	CvCapture* capture = cvCaptureFromCAM( CV_CAP_ANY );
-	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, 640 );
-	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_HEIGHT, 480 );
+	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, 320 );
+	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_HEIGHT, 240 );
 
 	if( !capture ) 
 	{
@@ -35,32 +35,33 @@ int OpticalFlowOpenCV::run()
 		
 		IplImage* velx = cvCreateImage(cvGetSize(imgTmp),IPL_DEPTH_32F,1); 
 		IplImage* vely = cvCreateImage(cvGetSize(imgTmp),IPL_DEPTH_32F,1);
+		IplImage* imgFlow = cvCreateImage(cvGetSize(imgTmp), IPL_DEPTH_8U, 3);
 		
 		ms();
 		cvCalcOpticalFlowHS(imgOld, imgNew, 0, velx, vely, .10, cvTermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, imgOld->width, 1e-6));
 		me();
 		
+		cvZero(imgFlow);
 		int step = 4;
-		for(int y=0; y<imgTmp->height; y += step) 
+		for(int y=0; y<imgFlow->height; y += step) 
 		{
 			float* px = (float*) (velx->imageData + y * velx->widthStep);
 			float* py = (float*) (vely->imageData + y * vely->widthStep);
-			for(int x=0; x<imgTmp->width; x += step) 
+			for(int x=0; x<imgFlow->width; x += step) 
 			{
 				if( px[x]>1 && py[x]>1 ) 
 				{
-					cvCircle(imgTmp, cvPoint( x, y ), 2, CVX_GRAY50, -1);
-					cvLine(imgTmp, cvPoint( x, y ), cvPoint( x+px[x]/2, y+py[x]/2 ), CV_RGB(255,0,0), 1, 0);
+					cvCircle(imgFlow, cvPoint( x, y ), 2, CVX_CIRCLE, -1);
+					cvLine(imgFlow, cvPoint( x, y ), cvPoint( x+px[x]/2, y+py[x]/2 ), CVX_LINE, 1, 0);
 				}
 			}
 		}
-		cvShowImage(FLOW_TITLE, imgTmp);
-		cvWaitKey(1);
+		cvShowImage(FLOW_TITLE, imgFlow);
     
 		cvReleaseImage(&velx);
 		cvReleaseImage(&vely);
 		cvReleaseImage(&imgOld);
-		//cvReleaseImage(&imgTmp);
+		cvReleaseImage(&imgFlow);
 		imgOld = imgNew;
 		
 		md();
@@ -114,5 +115,5 @@ void OpticalFlowOpenCV::md()
 		std::cout<<double(times[i] / count)<<" ms | ";
 	}
 
-	std::cout << double(global / count) << " ms" << std::endl;
+	std::cout << "total: " << double(global / count) << " ms" << std::endl;
 }

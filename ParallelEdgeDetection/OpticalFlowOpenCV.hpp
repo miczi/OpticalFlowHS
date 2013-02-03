@@ -6,7 +6,7 @@
 class OpticalFlowOpenCV
 {
 protected:
-	int times[10];
+	int times[1];
 	int count;
 	int time;
 	int timeIdx;
