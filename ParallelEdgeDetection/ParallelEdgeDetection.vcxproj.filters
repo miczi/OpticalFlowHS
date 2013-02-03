@@ -4,6 +4,7 @@
     <ClCompile Include="EdgeDetectionOpenCL.cpp" />
     <ClCompile Include="EdgeDetectionOpenCV.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="OpticalFlowOpenCV.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Release\Filters_Kernels.cl" />
@@ -11,5 +12,6 @@
   <ItemGroup>
     <ClInclude Include="EdgeDetectionOpenCL.hpp" />
     <ClInclude Include="EdgeDetectionOpenCV.hpp" />
+    <ClInclude Include="OpticalFlowOpenCV.hpp" />
   </ItemGroup>
 </Project>

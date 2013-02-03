@@ -80,10 +80,12 @@
     <ClCompile Include="EdgeDetectionOpenCL.cpp" />
     <ClCompile Include="EdgeDetectionOpenCV.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="OpticalFlowOpenCV.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EdgeDetectionOpenCL.hpp" />
     <ClInclude Include="EdgeDetectionOpenCV.hpp" />
+    <ClInclude Include="OpticalFlowOpenCV.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
