@@ -2,16 +2,15 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="EdgeDetectionOpenCL.cpp" />
-    <ClCompile Include="EdgeDetectionOpenCV.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OpticalFlowOpenCV.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Release\Filters_Kernels.cl" />
+    <None Include="fistaflow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EdgeDetectionOpenCL.hpp" />
-    <ClInclude Include="EdgeDetectionOpenCV.hpp" />
     <ClInclude Include="OpticalFlowOpenCV.hpp" />
   </ItemGroup>
 </Project>
