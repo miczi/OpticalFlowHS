@@ -11,8 +11,8 @@ int OpticalFlowOpenCV::run()
 	IplImage *imgOld;
 	
 	CvCapture* capture = cvCaptureFromCAM( CV_CAP_ANY );
-	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, 320 );
-	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_HEIGHT, 240 );
+	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, 640 );
+	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_HEIGHT, 480 );
 
 	if( !capture ) 
 	{

@@ -7,7 +7,7 @@ int	main(int argc, char * argv[])
 		std::cout<<"Nie zostaly podane zadne parametry do funkcji main.\nKoncze dzialanie!\n";
 		return 0;
 	}
-	if (strcmp(argv[1], "-cl") == 0)
+	/*if (strcmp(argv[1], "-cl") == 0)
 	{
 		if (argc != 6){
 			std::cout<<"Bledna lista argumentow!\n";
@@ -32,11 +32,11 @@ int	main(int argc, char * argv[])
 		}
 	}
 	else if (strcmp(argv[1], "-cv") == 0)
-	{
+	{*/
 		std::cout<<"OpenCV kamera!\n";
 		OpticalFlowOpenCV *e = new OpticalFlowOpenCV();
 		e->run();
-	}
+	//}
 	getchar();
 	return 0;
 }
