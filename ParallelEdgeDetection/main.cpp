@@ -1,37 +1,43 @@
-#include "EdgeDetectionOpenCL.hpp"
+#include "HSOpticalFlowOpenCL.hpp"
 #include "EdgeDetectionOpenCV.hpp"
-#include "OpticalFlowOpenCV.hpp"
 
-int	main(int argc, char * argv[])
+int	main(int argc, float * argv[])
 {
-	if (argc == 1){
+	/*if (argc == 1){
 		std::cout<<"Nie zostaly podane zadne parametry do funkcji main.\nKoncze dzialanie!\n";
 		return 0;
 	}
 	if (strcmp(argv[1], "-o") == 0){
 		if (strcmp(argv[2], "-hd") == 0){
-			if (argc != 10){
+			if (argc != 11){
 				std::cout<<"Bledna lista argumentow!\n";
 				return 0;
 			}
 			else
 			{
-				char *src = argv[2];
-				char *input = argv[3];
-				char *output = argv[4];
-				int lt = atoi(argv[5]);
-				int ht = atoi(argv[6]);
-				int it = atoi(argv[7]);
-				int gs = atoi(argv[8]);
-				char* dType = argv[9];
+				float *src = argv[2];
+				float *input1 = argv[3];
+				float *input2 = argv[4];
+				float *output = argv[5];
+				int lt = atoi(argv[6]);
+				int ht = atoi(argv[7]);
+				int it = atoi(argv[8]);
+				int gs = atoi(argv[9]);
+				float* dType = argv[10];*/
 
-				std::cout<<"edge OpenCL dysk!\n";
-				EdgeDetectionOpenCL clFilters("ParallelEdgeDetection", src, input, output, lt, ht, it, gs, dType);
+				std::cout<<"OpenCL dysk!\n";
+				//HSOpticalFlowOpenCL clFilters("ParallelEdgeDetection", "-hd", "test3.png", "test4.png", "blabla.png", 15 ,10, 1, "CPU");
+				HSOpticalFlowOpenCL clFilters("ParallelEdgeDetection", "-cam", "test1.png", "test2.png", "blabla.png", 15, 2,1, "CPU");
+				
+				std::cout<<"initialize\n";
 				clFilters.initialize();
+				std::cout<<"setup\n";
 				clFilters.setup();
+				std::cout<<"run\n";
 				clFilters.run();
+				std::cout<<"cleanup\n";
 				clFilters.cleanup();
-			}
+		/*	}
 		}
 		else if (strcmp(argv[2], "-cam") == 0){
 			if (argc != 7){
@@ -40,16 +46,14 @@ int	main(int argc, char * argv[])
 			}
 			else
 			{
-				char *src = argv[2];
+				float *src = argv[2];
 				int lt = atoi(argv[3]);
 				int ht = atoi(argv[4]);
 				int gs = atoi(argv[5]);
-				char* dType = argv[6];
+				float* dType = argv[6];
 
-				std::cout<<"lt: " << lt << "\n";
-				std::cout<<"ht: " << ht << "\n";
-				std::cout<<"edge OpenCL kamera!\n";
-				EdgeDetectionOpenCL clFilters("ParallelEdgeDetection", src,lt, ht, gs, dType);
+				std::cout<<"OpenCL kamera!\n";
+				HSOpticalFlowOpenCL clFilters("ParallelEdgeDetection", src,lt, ht, gs, dType);
 				clFilters.initialize();
 				clFilters.setup();
 				clFilters.run();
@@ -65,14 +69,14 @@ int	main(int argc, char * argv[])
 			}
 			else
 			{
-				char *src = argv[2];
-				char *input = argv[3];
-				char *output = argv[4];
+				float *src = argv[2];
+				float *input = argv[3];
+				float *output = argv[4];
 				int lt = atoi(argv[5]);
 				int ht = atoi(argv[6]);
 				int it = atoi(argv[7]);
 
-				std::cout<<"edge OpenCV dysk!\n";
+				std::cout<<"OpenCV dysk!\n";
 				EdgeDetectionOpenCV *e = new EdgeDetectionOpenCV(src, input, output, lt, ht, it);
 				e->runDetection();
 			}
@@ -84,22 +88,16 @@ int	main(int argc, char * argv[])
 			}
 			else
 			{
-				char *src = argv[2];
+				float *src = argv[2];
 				int lt = atoi(argv[3]);
 				int ht = atoi(argv[4]);
 
-				std::cout<<"edge OpenCV kamera!\n";
+				std::cout<<"OpenCV kamera!\n";
 				EdgeDetectionOpenCV *e = new EdgeDetectionOpenCV(src, lt, ht);
 				e->runDetection();
 			}
 		}
-		else
-		{
-			std::cout<<"OpenCV kamera!\n";
-			OpticalFlowOpenCV *e = new OpticalFlowOpenCV();
-			e->run();
-		}
-	}
+	}*/
 	getchar();
 	return 0;
 }
