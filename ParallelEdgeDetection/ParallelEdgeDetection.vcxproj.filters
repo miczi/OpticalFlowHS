@@ -1,15 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="EdgeDetectionOpenCV.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="HSOpticalFlowOpenCL.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Release\Filters_Kernels.cl" />
+    <ClInclude Include="HSOpticalFlowOpenCL.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EdgeDetectionOpenCV.hpp" />
-    <ClInclude Include="HSOpticalFlowOpenCL.hpp" />
+    <None Include="..\Release\Kernels.cl" />
   </ItemGroup>
 </Project>

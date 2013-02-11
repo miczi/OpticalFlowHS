@@ -18,47 +18,43 @@
 #define GROUP_SIZE 32
 
 /**
-* Edge Detection 
-* Class implements OpenCL Edge detection
+* Horn & Schunck optical flow class 
+* Class implements OpenCL Optical Flow computing
 * Derived from SDKSample base class
 */
 
 class HSOpticalFlowOpenCL : public SDKSample
 {
 
-	cl_float4* pixelData;				/**< Pointer to image data */
-	cl_float4* inputImageData1;          /**< Input bitmap data to device */
-	cl_float4* inputImageData2; 
-	cl_float4* outputImageData;         /**< Output from device */
-	cl_float4* tempImageData;
-	cl_float4* tempImageDataS;
-	cl_float4* tempImageDataN;
-	cl_int* gradDirection;
+	cl_float4* pixelData;			// image data
+	cl_float4* inputImageData1;     // first frame
+	cl_float4* inputImageData2;		// second frame
+
+	cl_float4* Ex;					// x derivatives
+	cl_float4* Ey;					// y derivatives
+	cl_float4* Et;					// t(frame) derivatives
+
+	cl_float4* u_avg;				// average u velocity for each pixel
+	cl_float4* v_avg;				// average v velocity for each pixel
+
+	cl_float4* u;					// u velocity for each pixel
+	cl_float4* v;					// u velocity for each pixel
+
+	cl_float alpha;					// flow smoothness coefficient
 
 
-	cl_float4* Ex;
-	cl_float4* Ey;
-	cl_float4* Et;
+	cl_context context;                 // CL context 
+	cl_device_id *devices;              // CL device list 
 
-	cl_float4* u_avg;
-	cl_float4* v_avg;
-	cl_float4* u;
-	cl_float4* v;
+	cl_device_type dType;				// CL device type (CPU or GPU)
 
-	cl_float alpha;
+	cl_mem inputImageBuffer1;            // CL memory buffer for input Image1 (first frame)
+	cl_mem inputImageBuffer2;            // CL memory buffer for input Image2 (next frame)
 
 
-	cl_context context;                 /**< CL context */
-	cl_device_id *devices;              /**< CL device list */
-	cl_device_type dType;
-
-	cl_mem inputImageBuffer1;            /**< CL memory buffer for input Image1 (first frame)*/
-	cl_mem inputImageBuffer2;            /**< CL memory buffer for input Image2 (next frame)*/
-
-
-	cl_mem ExBuffer;	/**< CL memory buffer for x derivatives*/
-	cl_mem EyBuffer;	/**< CL memory buffer for y derivatives*/
-	cl_mem EtBuffer;	/**< CL memory buffer for t (frame) derivatives*/
+	cl_mem ExBuffer;	// CL memory buffer for x derivatives
+	cl_mem EyBuffer;	// CL memory buffer for y derivatives
+	cl_mem EtBuffer;	// CL memory buffer for t(frame) derivatives
 
 	cl_mem u_avgBuffer;
 	cl_mem v_avgBuffer;
@@ -81,6 +77,7 @@ class HSOpticalFlowOpenCL : public SDKSample
 	size_t kernelWorkGroupSize;         /**< Group Size returned by kernel */
 	size_t blockSizeX;                  /**< Work-group size in x-direction */
 	size_t blockSizeY;                  /**< Work-group size in y-direction */
+
 	char* src;
 	char* input1;
 	char* input2;
@@ -88,19 +85,11 @@ class HSOpticalFlowOpenCL : public SDKSample
 	int iterations;                     /**< Number of iterations for kernel execution */
 	
 	double totalTimeM;
-	double totalTimeG;
-	double totalTimeS;
-	double totalTimeN;
-	double totalTimeB;
 	double totalTimeD;
 	double totalTimeUVA;
 	double totalTimeUV;
 
 	double totalTime;
-	double totalTimeGK;
-	double totalTimeSK;
-	double totalTimeNK;
-	double totalTimeBK;
 	double totalTimeDK;
 	double totalTimeUVAK;
 	double totalTimeUVK;
@@ -131,10 +120,9 @@ public:
 	* Initialize member variables
 	* @param name name of sample (const float*) 
 	* @param src source (hard disc or camera) (const float*)
-	* @param input name of input file (float*)
+	* @param input name of input1 file (float*)
+	* @param input name of input2 file (float*)
 	* @param output name of output file (float*)
-	* @param lt low treshold (int)
-	* @param ht hight treshold (int)
 	* @param it number of iterations (int)
 	* @param gs group size (int)
 	* @param dType type od device (float*)
@@ -156,19 +144,11 @@ public:
 		this->iterations = it;
 		
 		totalTime = 0.0;				
-		totalTimeGK = 0.0;
-		totalTimeSK = 0.0;
-		totalTimeNK = 0.0;
-		totalTimeBK = 0.0;
 		totalTimeDK = 0.0;
 		totalTimeUVAK = 0.0;
 		totalTimeUVK = 0.0;
 
 		totalTimeM = 0.0;
-		totalTimeG = 0.0;
-		totalTimeS = 0.0;
-		totalTimeN = 0.0;
-		totalTimeB = 0.0;
 		totalTimeD = 0.0;
 		totalTimeUVA = 0.0;
 		totalTimeUV = 0.0;
@@ -185,12 +165,10 @@ public:
 	* Initialize member variables
 	* @param name name of sample (const float*) 
 	* @param src source (hard disc or camera) (const float*)
-	* @param lt low treshold (int)
-	* @param ht hight treshold (int)
 	* @param gs group size (int)
 	* @param dType type od device (float*)
 	*/
-	HSOpticalFlowOpenCL(const char* name, char* src, int lt, int ht, int gs, char* dType)
+	HSOpticalFlowOpenCL(const char* name, char* src, float alp, int it, int gs, char* dType)
 		: SDKSample(name),
 		byteRWSupport(true)
 	{
@@ -200,17 +178,19 @@ public:
 		blockSizeY = 1;
 		this->src = src;
 
-		totalTime = 0.0;
-		totalTimeGK = 0.0;
-		totalTimeSK = 0.0;
-		totalTimeNK = 0.0;
-		totalTimeBK = 0.0;
+		this->alpha = alp;
+		this->iterations = it;
+
+		totalTime = 0.0;				
+		totalTimeDK = 0.0;
+		totalTimeUVAK = 0.0;
+		totalTimeUVK = 0.0;
 
 		totalTimeM = 0.0;
-		totalTimeG = 0.0;
-		totalTimeS = 0.0;
-		totalTimeN = 0.0;
-		totalTimeB = 0.0;
+		totalTimeD = 0.0;
+		totalTimeUVA = 0.0;
+		totalTimeUV = 0.0;
+
 
 
 		if (strcmp(dType, "CPU") == 0)
@@ -246,12 +226,6 @@ public:
 	* @return 1 on success and 0 on failure
 	*/
 	int runCLKernels();
-
-	/**
-	* Reference CPU implementation of Binomial Option
-	* for performance comparison
-	*/
-	//void sobelFilterCPUReference();
 
 	/**
 	* Override from SDKSample. Print sample stats.

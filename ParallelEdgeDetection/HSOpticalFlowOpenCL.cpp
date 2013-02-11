@@ -21,7 +21,7 @@ int HSOpticalFlowOpenCL::readInputImage(cl_float4** inputImageData)
 		}
 	}
 
-	/* allocate memory for input & output image data  */
+	//allocate memory for input image data 
 	*inputImageData  = (cl_float4*)malloc(width * height * sizeof(cl_float4));
 
 	/* error check */
@@ -60,12 +60,6 @@ int HSOpticalFlowOpenCL::readInputFrame(cl_float4** inputImageData)
 
 	/* Copy pixel data into inputImageData */
 	memcpy(*inputImageData, pixelData, width * height *  sizeof(cl_float4));
-	/* Initialize data to 0 */
-	/*memset(tempImageData, 0, width * height * pixelSize);
-	memset(tempImageDataS, 0, width * height * pixelSize);
-	memset(tempImageDataN, 0, width * height * pixelSize);
-	memset(outputImageData, 0, width * height * pixelSize);
-	memset(gradDirection, 0, width * height * sizeof(cl_int));*/
 	return 0;
 }
 
@@ -153,7 +147,6 @@ int HSOpticalFlowOpenCL::setupCL()
 		NULL);
 
 	/* Create command queue */
-
 	cl_command_queue_properties prop = 0;
 
 	if(timing)
@@ -238,7 +231,7 @@ int HSOpticalFlowOpenCL::setupCL()
 	/* create a CL program using the kernel source */
 	streamsdk::SDKFile kernelFile;
 	std::string kernelPath = sampleCommon->getPath();
-	kernelPath.append("Filters_Kernels.cl");
+	kernelPath.append("Kernels.cl");
 	if(!kernelFile.open(kernelPath.c_str()))
 	{
 		std::cout << "Loading kernel file error: " << kernelPath << std::endl;
@@ -278,7 +271,6 @@ int HSOpticalFlowOpenCL::setupCL()
     }
 
 	/* get a kernel object handle for a kernel with the given name */
-
 	ComputeDerivativesKernel =  clCreateKernel(
 		program,
 		"ComputeDerivativesKernel",
@@ -406,6 +398,7 @@ clSetKernelArg(
 	/* 
 	* Enqueue a kernel run call.
 	*/
+
 	globalThreads[0] = width;
 	globalThreads[1] = height;
 	localThreads[0] = blockSizeX;
@@ -444,7 +437,7 @@ clSetKernelArg(
 
 	total = (double)(end - start) / 1e6; /* Convert nanoseconds to msecs */
 	//printf("DER: Total kernel time was %5.3f msecs.\n", total);
-	totalTimeDK = total;
+	totalTimeDK = totalTimeDK + total;
 	totalTime = totalTime + total;
 
 	clEnqueueReadBuffer(
@@ -715,7 +708,7 @@ int HSOpticalFlowOpenCL::runCLKernels()
 	totalTimeUV = totalTimeUV + double(t2);
 	//std::cout<<"totalTimeUV "<<GetTickCount()<<"\n";
 
-	totalTimeM = totalTime + totalTimeG + totalTimeN + totalTimeS + totalTimeD;
+	totalTimeM = totalTime + totalTimeD + totalTimeUV + totalTimeUVA;
 
 	clReleaseEvent(events[0]);
 	return SDK_SUCCESS;
@@ -778,64 +771,23 @@ int HSOpticalFlowOpenCL::run()
 		gray = cvCreateImage(cvSize(image->width,image->height), IPL_DEPTH_8U, 1);
 		cvCvtColor(image, gray, CV_BGR2GRAY);
 		readInputImage(&inputImageData2);
-	/*for(unsigned int i = 0; i < height; i++){
-		for(unsigned int j = 0; j < width; j++){
-			std::cout<<"pixelData.[j + i*width].s[0]: "<<(float)inputImageData1[j + i*width].s[0]<<"\n";
-			std::cout<<"pixelData[j + i*width].s[1]: "<<inputImageData1[j + i*width].s[1]<<"\n";
-			std::cout<<"pixelData[j + i*width].s[2]: "<<inputImageData1[j + i*width].s[2]<<"\n";
-		}
-	}*/
-	/*for(unsigned int i = 0; i < height; i++){
-		for(unsigned int j = 0; j < width; j++){
-			std::cout<<"inputImageData1["<< j + i*width << "].s[0]: "<<(float)inputImageData1[j + i*width].s[0]<<"\n";
-			std::cout<<"inputImageData1["<< j + i*width << "].s[1]: "<<(float)inputImageData1[j + i*width].s[1]<<"\n";
-			std::cout<<"inputImageData1["<< j + i*width << "].s[2]: "<<(float)inputImageData1[j + i*width].s[2]<<"\n";
-		}
-	}*/
+
 	
 		std::cout<<"przed setupCL\n";
 		setupCL();
 		std::cout<<"po setupCL\n";
 		edge = cvCreateImage(cvSize(image->width,image->height), IPL_DEPTH_8U, 1);
 
-			runDerivatives();	
+		runDerivatives();	
 		for (int i = 0; i < iterations; i++)
 			runCLKernels();
 
-	//for(unsigned int i = 0; i < height * width; i++){
-	//	if(Ex[i].s[0] > 0 || Ey[i].s[0] > 0 || Et[i].s[0] > 0){
-	//		std::cout<<"Ex["<< i << "].s[0]: "<<(float)Ex[i].s[0]<<"\n";
-	//		std::cout<<"Ey["<< i << "].s[0]: "<<(float)Ey[i].s[0]<<"\n";
-	//		std::cout<<"Et["<< i << "].s[0]: "<<(float)Et[i].s[0]<<"\n";
-	//	}
-	//}
-
-	/*std::cout<<"Najpierw u:\n";
-	for(unsigned int i = 0; i < height * width; i++){	
-		if(i>0 && i%(height)==0){
-			std::cout<<"\n";
-		}
-		std::cout<<(float)u[i].s[0] << ", ";
-	}
-	std::cout<<"\nTeraz v:\n";
-	for(unsigned int i = 0; i < height * width; i++){	
-		if(i>0 && i%(height)==0){
-			std::cout<<"\n";
-		}
-		std::cout<<(float)v[i].s[0] << ", ";
-	}
-	std::cout<<"\n";*/
 
 		std::cout<<"Avg KERNEL time: "<<(totalTimeDK + totalTimeUVAK + totalTimeUVK)/iterations<<" [ms]"<<std::endl;
-		
 		std::cout<<"Avg KERNEL ComputeDerivativesKernel time: "<<totalTimeDK<<" [ms]"<<std::endl;
 		std::cout<<"Avg KERNEL u_v_avgKernel time: "<<totalTimeUVAK/iterations<<" [ms]"<<std::endl;
 		std::cout<<"Avg KERNEL u_v_updateKernel time: "<<totalTimeUVK/iterations<<" [ms]"<<std::endl;
-
-
-
 		std::cout<<std::endl;
-
 		std::cout<<"Avg time: "<<double(totalTimeDK + totalTimeM)/iterations<<" [ms]"<<std::endl;
 		std::cout<<"Avg Derivatives time: "<<totalTimeD<<" [ms]"<<std::endl;
 		std::cout<<"Avg u_v_avg time: "<<totalTimeUVA<<" [ms]"<<std::endl;
@@ -845,6 +797,7 @@ int HSOpticalFlowOpenCL::run()
 		IplImage* imgFlow = cvCreateImage(cvSize(image->width,image->height), IPL_DEPTH_8U,  3);
 		cvZero(imgFlow);
 
+		//drawing optical flow
 		int step = 4;
 		for(unsigned int i = 0; i < height; i += step){
 			for(unsigned int j = 0; j < width; j += step){
@@ -855,15 +808,6 @@ int HSOpticalFlowOpenCL::run()
 			}
 		}
 
-							
-		//memcpy(pixelData, inputImageData1, width * height * pixelSize);
-		//for (unsigned int i = 0; i < width * height; i++)
-		//{
-		//	s.val[0] = pixelData[i].s[0];
-		//	s.val[1] = pixelData[i].s[1];
-		//	s.val[2] = pixelData[i].s[2];
-		//	cvSet1D(edge, i, s);
-		//}		
 		cvSaveImage(output, imgFlow);
 		return 0;
 	}
@@ -886,14 +830,12 @@ int HSOpticalFlowOpenCL::run()
 		CvScalar s;
 
 		readInputImage(&inputImageData1);
-		std::cout<<"przed setupCL\n";
 		setupCL();
-		std::cout<<"po setupCL\n";
 		edge = cvCreateImage(cvSize(image->width,image->height), IPL_DEPTH_8U, 1);
 
 		inputImageData2  = (cl_float4*)malloc(width * height * sizeof(cl_float4));
 
-		cvNamedWindow( "Edge Detection", CV_WINDOW_AUTOSIZE );
+		cvNamedWindow( "Optical flow", CV_WINDOW_AUTOSIZE );
 		while( 1 ) {
 
 			image = cvQueryFrame( capture );
@@ -913,6 +855,7 @@ int HSOpticalFlowOpenCL::run()
 			IplImage* imgFlow = cvCreateImage(cvSize(image->width,image->height), IPL_DEPTH_8U,  3);
 			cvZero(imgFlow);
 
+			//drawing optical flow
 			int step = 4;
 			for(unsigned int i = 0; i < height; i += step){
 				for(unsigned int j = 0; j < width; j += step){
@@ -922,40 +865,28 @@ int HSOpticalFlowOpenCL::run()
 					}
 				}
 			}
-			/*memcpy(pixelData, inputImageData2, width * height * pixelSize);
 
-			for (unsigned int i = 0; i < width * height; i++)
-			{
-				s.val[0] = pixelData[i].s[0];
-				s.val[1] = pixelData[i].s[1];
-				s.val[2] = pixelData[i].s[2];
-				cvSet1D(edge, i, s);
-			}	*/	
-			cvShowImage( "Edge Detection", imgFlow );
-			//cvSet(edge, cvScalar(0,0,0));
+			cvShowImage( "Optical flow", imgFlow );
 
 			memcpy(inputImageData1, inputImageData2, width * height * pixelSize);
+
 			if( cvWaitKey(10) == 27 ){
-				std::cout<<"Avg KERNEL time: "<<double(totalTime/(count+1))<<" [ms]"<<std::endl;	
-				std::cout<<"Avg KERNEL GAUSS time: "<<totalTimeGK/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg KERNEL SOBEL time: "<<totalTimeSK/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg KERNEL NMS time: "<<totalTimeNK/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg KERNEL BLOB time: "<<totalTimeBK/(count+1)<<" [ms]"<<std::endl;
 
+				std::cout<<"Avg KERNEL ComputeDerivativesKernel time: "<<totalTimeDK/(count+1)<<" [ms]"<<std::endl;
+				std::cout<<"Avg KERNEL u_v_avgKernel time: "<<totalTimeUVAK/(count+1)<<" [ms]"<<std::endl;
+				std::cout<<"Avg KERNEL u_v_updateKernel time: "<<totalTimeUVK/(count+1)<<" [ms]"<<std::endl;
 				std::cout<<std::endl;
-
 				std::cout<<"Avg time: "<<totalTimeM/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg GAUSS time: "<<totalTimeG/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg SOBEL time: "<<totalTimeS/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg NMS time: "<<totalTimeN/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg BLOB time: "<<totalTimeB/(count+1)<<" [ms]"<<std::endl;
+				std::cout<<"Avg Derivatives time: "<<totalTimeD/(count+1)<<" [ms]"<<std::endl;
+				std::cout<<"Avg u_v_avg time: "<<totalTimeUVA/(count+1)<<" [ms]"<<std::endl;
+				std::cout<<"Avg u_v time: "<<totalTimeUV/(count+1)<<" [ms]"<<std::endl;
 
 				break;
 			}
 			count++;
 		}
 		cvReleaseCapture( &capture );
-		cvDestroyWindow( "Edge Detection" );
+		cvDestroyWindow( "Optical flow" );
 	}
 	return SDK_SUCCESS;
 }
