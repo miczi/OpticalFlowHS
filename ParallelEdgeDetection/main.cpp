@@ -1,4 +1,5 @@
 #include "HSOpticalFlowOpenCL.hpp"
+#include "OpticalFlowOpenCV.hpp"
 
 int	main(int argc, char * argv[])
 {
@@ -55,6 +56,9 @@ int	main(int argc, char * argv[])
 		}
 	}
 	else if (strcmp(argv[1], "-ref") == 0){
+		std::cout<<"OpenCV kamera!\n";
+		OpticalFlowOpenCV *e = new OpticalFlowOpenCV();
+		e->run();
 	//	if (strcmp(argv[2], "-hd") == 0){
 	//		if (argc != 8){
 	//			std::cout<<"Bledna lista argumentow!\n";

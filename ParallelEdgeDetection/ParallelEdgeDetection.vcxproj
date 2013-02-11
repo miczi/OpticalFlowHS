@@ -79,9 +79,11 @@
   <ItemGroup>
     <ClCompile Include="HSOpticalFlowOpenCL.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="OpticalFlowOpenCV.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HSOpticalFlowOpenCL.hpp" />
+    <ClInclude Include="OpticalFlowOpenCV.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

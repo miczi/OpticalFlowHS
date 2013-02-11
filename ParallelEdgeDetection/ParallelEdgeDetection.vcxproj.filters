@@ -3,9 +3,11 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="HSOpticalFlowOpenCL.cpp" />
+    <ClCompile Include="OpticalFlowOpenCV.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HSOpticalFlowOpenCL.hpp" />
+    <ClInclude Include="OpticalFlowOpenCV.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Release\Kernels.cl" />
