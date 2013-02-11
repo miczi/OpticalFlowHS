@@ -9,6 +9,8 @@ int OpticalFlowOpenCV::run()
 	IplImage *imgTmp;
 	IplImage *imgNew;
 	IplImage *imgOld;
+	IplImage *image1;
+	IplImage *image2;
 	
 	CvCapture* capture = cvCaptureFromCAM( CV_CAP_ANY );
 	cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, 640 );
@@ -25,17 +27,27 @@ int OpticalFlowOpenCV::run()
 	imgTmp = cvQueryFrame(capture);
 	imgOld = cvCreateImage(cvGetSize(imgTmp), IPL_DEPTH_8U, 1);
 	cvCvtColor(imgTmp, imgOld, CV_BGR2GRAY);
+
+	image1 = cvLoadImage("test3.png", 1);
+	image2 = cvLoadImage("test4.png", 1);
 	
+	imgOld = cvCreateImage(cvSize(image1->width,image1->height), IPL_DEPTH_8U, 1);
+	imgNew = cvCreateImage(cvSize(image2->width,image2->height), IPL_DEPTH_8U, 1);
+
+	cvCvtColor(image1, imgOld, CV_BGR2GRAY);
+	cvCvtColor(image2, imgNew, CV_BGR2GRAY);
+
+
 	mi();
-	while (1)
-	{
-		imgTmp = cvQueryFrame(capture);
+	/*while (1)
+	{*/
+		/*imgTmp = cvQueryFrame(capture);
 		imgNew = cvCreateImage(cvGetSize(imgTmp), IPL_DEPTH_8U, 1);
-		cvCvtColor(imgTmp, imgNew, CV_BGR2GRAY);
+		cvCvtColor(imgTmp, imgNew, CV_BGR2GRAY);*/
 		
-		IplImage* velx = cvCreateImage(cvGetSize(imgTmp),IPL_DEPTH_32F,1); 
-		IplImage* vely = cvCreateImage(cvGetSize(imgTmp),IPL_DEPTH_32F,1);
-		IplImage* imgFlow = cvCreateImage(cvGetSize(imgTmp), IPL_DEPTH_8U, 3);
+		IplImage* velx = cvCreateImage(cvSize(image1->width,image1->height),IPL_DEPTH_32F,1); 
+		IplImage* vely = cvCreateImage(cvSize(image1->width,image1->height),IPL_DEPTH_32F,1);
+		IplImage* imgFlow = cvCreateImage(cvSize(image1->width,image1->height), IPL_DEPTH_8U, 3);
 		
 		ms();
 		cvCalcOpticalFlowHS(imgOld, imgNew, 0, velx, vely, .1, cvTermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 10, 1e-6));
@@ -49,15 +61,21 @@ int OpticalFlowOpenCV::run()
 			float* py = (float*) (vely->imageData + y * vely->widthStep);
 			for(int x=0; x<imgFlow->width; x += step) 
 			{
+				/*std::cout<< "px[" << x << "]: " << px[x] << "\n";
+				std::cout<< "py[" << x << "]: " << py[x] << "\n";*/
 				if( px[x]>1 || py[x]>1 || px[x]<-1 || py[x]<-1) 
 				{
+					std::cout<< "jest \n";
 					cvCircle(imgFlow, cvPoint( x, y ), 2, CVX_CIRCLE, -1);
 					cvLine(imgFlow, cvPoint( x, y ), cvPoint( x+px[x]/2, y+py[x]/2 ), CVX_LINE, 1, 0);
 				}
 			}
 		}
-		cvShowImage(FLOW_TITLE, imgFlow);
-    
+		cvSaveImage("wynik.png", imgFlow);
+		/*std::cout<< "velx->imageData" << velx->imageData;
+		std::cout<< "vely->imageData" << vely->imageData;
+		std::cout<< "velx->widthStep" << velx->widthStep;
+		std::cout<< "vely->widthStep" << vely->widthStep;*/
 		cvReleaseImage(&velx);
 		cvReleaseImage(&vely);
 		cvReleaseImage(&imgOld);
@@ -66,9 +84,9 @@ int OpticalFlowOpenCV::run()
 		
 		md();
 		mr();
-		if( cvWaitKey(10) == 27 )
-			break;
-	}
+		/*if( cvWaitKey(10) == 27 )
+			break;*/
+	//}
 	// destroy windows
 	cvDestroyWindow(FLOW_TITLE);
 	return 0;
