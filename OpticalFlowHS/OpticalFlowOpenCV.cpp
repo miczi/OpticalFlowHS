@@ -28,8 +28,8 @@ int OpticalFlowOpenCV::run()
 	imgOld = cvCreateImage(cvGetSize(imgTmp), IPL_DEPTH_8U, 1);
 	cvCvtColor(imgTmp, imgOld, CV_BGR2GRAY);
 
-	image1 = cvLoadImage("test1.png", 1);
-	image2 = cvLoadImage("test2.png", 1);
+	image1 = cvLoadImage("test3.png", 1);
+	image2 = cvLoadImage("test4.png", 1);
 	
 	imgOld = cvCreateImage(cvSize(image1->width,image1->height), IPL_DEPTH_8U, 1);
 	imgNew = cvCreateImage(cvSize(image2->width,image2->height), IPL_DEPTH_8U, 1);
@@ -63,12 +63,12 @@ int OpticalFlowOpenCV::run()
 			{
 				/*std::cout<< "px[" << x << "]: " << px[x] << "\n";
 				std::cout<< "py[" << x << "]: " << py[x] << "\n";*/
-				//if( px[x]>1 || py[x]>1 || px[x]<-1 || py[x]<-1) 
-				//{
+				if( px[x]>1 || py[x]>1 || px[x]<-1 || py[x]<-1) 
+				{
 					
 					cvCircle(imgFlow, cvPoint( x, y ), 2, CVX_CIRCLE, -1);
-					cvLine(imgFlow, cvPoint( x, y ), cvPoint( x+px[x]/2, y+py[x]/2 ), CVX_LINE, 1, 0);
-				//}
+					cvLine(imgFlow, cvPoint( x, y ), cvPoint( x+px[x], y+py[x] ), CVX_LINE, 1, 0);
+				}
 			}
 		}
 		cvSaveImage("wynik.png", imgFlow);
