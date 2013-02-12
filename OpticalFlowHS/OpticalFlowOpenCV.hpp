@@ -5,17 +5,7 @@
 
 class OpticalFlowOpenCV
 {
-protected:
-	int times[1];
-	int count;
-	int time;
-	int timeIdx;
 public:
-	int run();
-	void mi();
-	void mr();
-	void ms();
-	void me();
-	void mes();
-	void md();
+	int runFromImg(char* input1, char* input2, char* output, float lambda, int it);
+	int runFromCamera(float lambda, int it);
 };
