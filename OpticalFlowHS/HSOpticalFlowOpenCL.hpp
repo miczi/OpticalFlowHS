@@ -18,41 +18,57 @@
 #define GROUP_SIZE 32
 
 /**
-* Edge Detection 
-* Class implements OpenCL Edge detection
+* Horn & Schunck optical flow class 
+* Class implements OpenCL Optical Flow computing
 * Derived from SDKSample base class
 */
 
-class EdgeDetectionOpenCL : public SDKSample
+class HSOpticalFlowOpenCL : public SDKSample
 {
 
-	cl_uchar4* pixelData;				/**< Pointer to image data */
-	cl_uchar4* inputImageData;          /**< Input bitmap data to device */
-	cl_uchar4* outputImageData;         /**< Output from device */
-	cl_uchar4* tempImageData;
-	cl_uchar4* tempImageDataS;
-	cl_uchar4* tempImageDataN;
-	cl_int* gradDirection;
-	cl_int* treshd;
+	cl_float4* pixelData;			// image data
+	cl_float4* inputImageData1;     // first frame
+	cl_float4* inputImageData2;		// second frame
 
-	cl_context context;                 /**< CL context */
-	cl_device_id *devices;              /**< CL device list */
-	cl_device_type dType;
+	cl_float4* Ex;					// x derivatives
+	cl_float4* Ey;					// y derivatives
+	cl_float4* Et;					// t(frame) derivatives
 
-	cl_mem inputImageBuffer;            /**< CL memory buffer for input Image*/
-	cl_mem tempImageBuffer;				/**< CL memory buffer for gauss filter*/
-	cl_mem tempImageBufferS;			/**< CL memory buffer for sobel filter*/
-	cl_mem tempImageBufferN;			/**< CL memory buffer for nms*/
-	cl_mem gradDirectionBuffer;			/**< CL memory buffer for angle*/
-	cl_mem outputImageBuffer;           /**< CL memory buffer for Output Image*/
-	cl_mem treshb;
+	cl_float4* u_avg;				// average u velocity for each pixel
+	cl_float4* v_avg;				// average v velocity for each pixel
+
+	cl_float4* u;					// u velocity for each pixel
+	cl_float4* v;					// u velocity for each pixel
+
+	cl_float alpha;					// flow smoothness coefficient
+
+
+	cl_context context;                 // CL context 
+	cl_device_id *devices;              // CL device list 
+
+	cl_device_type dType;				// CL device type (CPU or GPU)
+
+	cl_mem inputImageBuffer1;            // CL memory buffer for input Image1 (first frame)
+	cl_mem inputImageBuffer2;            // CL memory buffer for input Image2 (next frame)
+
+
+	cl_mem ExBuffer;	// CL memory buffer for x derivatives
+	cl_mem EyBuffer;	// CL memory buffer for y derivatives
+	cl_mem EtBuffer;	// CL memory buffer for t(frame) derivatives
+
+	cl_mem u_avgBuffer;
+	cl_mem v_avgBuffer;
+
+	cl_mem uBuffer;
+	cl_mem vBuffer;
+
+
 
 	cl_command_queue commandQueue;      /**< CL command queue */
 	cl_program program;                 /**< CL program  */
-	cl_kernel gauss_filter;             /**< CL kernel */
-	cl_kernel sobel_filter;				/**< CL kernel */
-	cl_kernel nms_dt;					/**< CL kernel */
-	cl_kernel blob;						/**< CL kernel */
+	cl_kernel ComputeDerivativesKernel;	
+	cl_kernel u_v_avgKernel;
+	cl_kernel u_v_updateKernel;
 
 	cl_uint pixelSize;                  /**< Size of a pixel in BMP format> */
 	cl_uint width;                      /**< Width of image */
@@ -61,22 +77,23 @@ class EdgeDetectionOpenCL : public SDKSample
 	size_t kernelWorkGroupSize;         /**< Group Size returned by kernel */
 	size_t blockSizeX;                  /**< Work-group size in x-direction */
 	size_t blockSizeY;                  /**< Work-group size in y-direction */
+
 	char* src;
-	char* input;
+	char* input1;
+	char* input2;
 	char* output;
 	int iterations;                     /**< Number of iterations for kernel execution */
 	
 	double totalTimeM;
-	double totalTimeG;
-	double totalTimeS;
-	double totalTimeN;
-	double totalTimeB;
+	double totalTimeD;
+	double totalTimeUVA;
+	double totalTimeUV;
 
 	double totalTime;
-	double totalTimeGK;
-	double totalTimeSK;
-	double totalTimeNK;
-	double totalTimeBK;
+	double totalTimeDK;
+	double totalTimeUVAK;
+	double totalTimeUVK;
+	
 
 	IplImage *image;
 	IplImage *gray;
@@ -89,58 +106,52 @@ public:
 	* Read bitmap image and allocate host memory
 	* @return 1 on success and 0 on failure
 	*/
-	int readInputImage();
+	int readInputImage(cl_float4** inputImageDat);
 
 
 	/**
 	* Read input frame and allocate host memory
 	* @return 1 on success and 0 on failure
 	*/
-	int readInputFrame();
+	int readInputFrame(cl_float4** inputImageDat);
 
 	/** 
 	* Constructor 
 	* Initialize member variables
-	* @param name name of sample (const char*) 
-	* @param src source (hard disc or camera) (const char*)
-	* @param input name of input file (char*)
-	* @param output name of output file (char*)
-	* @param lt low treshold (int)
-	* @param ht hight treshold (int)
+	* @param name name of sample (const float*) 
+	* @param src source (hard disc or camera) (const float*)
+	* @param input name of input1 file (float*)
+	* @param input name of input2 file (float*)
+	* @param output name of output file (float*)
 	* @param it number of iterations (int)
 	* @param gs group size (int)
-	* @param dType type od device (char*)
+	* @param dType type od device (float*)
 	*/
-	EdgeDetectionOpenCL(const char* name, char* src, char* input, char* output, int lt, int ht, int it, int gs, char* dType)
+	HSOpticalFlowOpenCL(const char* name, char* src, char* input1, char* input2, char* output, float alp, int it, int gs, char* dType)
 		: SDKSample(name),
-		inputImageData(NULL),
-		outputImageData(NULL),
 		byteRWSupport(true)
 	{
-		pixelSize = sizeof(cl_uchar4);
+		pixelSize = sizeof(cl_float4);
 		pixelData = NULL;
 		blockSizeX = gs;
 		blockSizeY = 1;
 		this->src = src;
-		this->input = input;
+		this->input1 = input1;
+		this->input2 = input2;
 		this->output = output;
 
-		treshd = (cl_int*)malloc(2 * sizeof(cl_int));
-
-		this->treshd[0] = lt;
-		this->treshd[1] = ht;
+		this->alpha = alp;
 		this->iterations = it;
+		
 		totalTime = 0.0;				
-		totalTimeGK = 0.0;
-		totalTimeSK = 0.0;
-		totalTimeNK = 0.0;
-		totalTimeBK = 0.0;
+		totalTimeDK = 0.0;
+		totalTimeUVAK = 0.0;
+		totalTimeUVK = 0.0;
 
 		totalTimeM = 0.0;
-		totalTimeG = 0.0;
-		totalTimeS = 0.0;
-		totalTimeN = 0.0;
-		totalTimeB = 0.0;
+		totalTimeD = 0.0;
+		totalTimeUVA = 0.0;
+		totalTimeUV = 0.0;
 
 
 		if (strcmp(dType, "CPU") == 0)
@@ -152,39 +163,34 @@ public:
 	/** 
 	* Constructor 
 	* Initialize member variables
-	* @param name name of sample (const char*) 
-	* @param src source (hard disc or camera) (const char*)
-	* @param lt low treshold (int)
-	* @param ht hight treshold (int)
+	* @param name name of sample (const float*) 
+	* @param src source (hard disc or camera) (const float*)
 	* @param gs group size (int)
-	* @param dType type od device (char*)
+	* @param dType type od device (float*)
 	*/
-	EdgeDetectionOpenCL(const char* name, char* src, int lt, int ht, int gs, char* dType)
+	HSOpticalFlowOpenCL(const char* name, char* src, float alp, int it, int gs, char* dType)
 		: SDKSample(name),
-		inputImageData(NULL),
-		outputImageData(NULL),
 		byteRWSupport(true)
 	{
-		pixelSize = sizeof(cl_uchar4);
+		pixelSize = sizeof(cl_float4);
 		pixelData = NULL;
 		blockSizeX = gs;
 		blockSizeY = 1;
 		this->src = src;
 
-		treshd = (cl_int*)malloc(2 * sizeof(cl_int));
-		this->treshd[0] = lt;
-		this->treshd[1] = ht;
-		totalTime = 0.0;
-		totalTimeGK = 0.0;
-		totalTimeSK = 0.0;
-		totalTimeNK = 0.0;
-		totalTimeBK = 0.0;
+		this->alpha = alp;
+		this->iterations = it;
+
+		totalTime = 0.0;				
+		totalTimeDK = 0.0;
+		totalTimeUVAK = 0.0;
+		totalTimeUVK = 0.0;
 
 		totalTimeM = 0.0;
-		totalTimeG = 0.0;
-		totalTimeS = 0.0;
-		totalTimeN = 0.0;
-		totalTimeB = 0.0;
+		totalTimeD = 0.0;
+		totalTimeUVA = 0.0;
+		totalTimeUV = 0.0;
+
 
 
 		if (strcmp(dType, "CPU") == 0)
@@ -193,7 +199,7 @@ public:
 			this->dType = CL_DEVICE_TYPE_GPU;
 	}
 
-	~EdgeDetectionOpenCL()
+	~HSOpticalFlowOpenCL()
 	{
 	}
 
@@ -211,6 +217,8 @@ public:
 	*/
 	int setupCL();
 
+	
+	int runDerivatives();
 	/**
 	* Set values for kernels' arguments, enqueue calls to the kernels
 	* on to the command queue, wait till end of kernel execution.
@@ -218,12 +226,6 @@ public:
 	* @return 1 on success and 0 on failure
 	*/
 	int runCLKernels();
-
-	/**
-	* Reference CPU implementation of Binomial Option
-	* for performance comparison
-	*/
-	//void sobelFilterCPUReference();
 
 	/**
 	* Override from SDKSample. Print sample stats.
