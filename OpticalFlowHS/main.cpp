@@ -19,10 +19,10 @@ int	main(int argc, char * argv[])
 {
 	//runCLDisk(argccld, argvcld);
 	//runCLCamera(argcclc, argvclc);
-	runCVDisk(argccvd, argvcvd);	
+	//runCVDisk(argccvd, argvcvd);	
 	//runCVCamera(argccvc, argvcvc);
-	getchar();
-	return 0;
+	//getchar();
+	//return 0;
 
 	if (argc == 1){
 		std::cout<<"Nie zostaly podane zadne parametry do funkcji main.\nKoncze dzialanie!\n";
