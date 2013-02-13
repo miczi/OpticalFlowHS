@@ -784,14 +784,14 @@ int HSOpticalFlowOpenCL::run()
 
 
 		std::cout<<"Avg KERNEL time: "<<(totalTimeDK + totalTimeUVAK + totalTimeUVK)/iterations<<" [ms]"<<std::endl;
-		std::cout<<"Avg KERNEL ComputeDerivativesKernel time: "<<totalTimeDK<<" [ms]"<<std::endl;
+		std::cout<<"KERNEL ComputeDerivativesKernel time: "<<totalTimeDK<<" [ms]"<<std::endl;
 		std::cout<<"Avg KERNEL u_v_avgKernel time: "<<totalTimeUVAK/iterations<<" [ms]"<<std::endl;
 		std::cout<<"Avg KERNEL u_v_updateKernel time: "<<totalTimeUVK/iterations<<" [ms]"<<std::endl;
 		std::cout<<std::endl;
 		std::cout<<"Avg time: "<<double(totalTimeDK + totalTimeM)/iterations<<" [ms]"<<std::endl;
-		std::cout<<"Avg Derivatives time: "<<totalTimeD<<" [ms]"<<std::endl;
-		std::cout<<"Avg u_v_avg time: "<<totalTimeUVA<<" [ms]"<<std::endl;
-		std::cout<<"Avg u_v time: "<<totalTimeUV<<" [ms]"<<std::endl;
+		std::cout<<"Derivatives time: "<<totalTimeD<<" [ms]"<<std::endl;
+		std::cout<<"Avg u_v_avg time: "<<totalTimeUVA/iterations<<" [ms]"<<std::endl;
+		std::cout<<"Avg u_v time: "<<totalTimeUV/iterations<<" [ms]"<<std::endl;
 
 
 		IplImage* imgFlow = cvCreateImage(cvSize(image->width,image->height), IPL_DEPTH_8U,  3);
@@ -873,13 +873,13 @@ int HSOpticalFlowOpenCL::run()
 			if( cvWaitKey(10) == 27 ){
 
 				std::cout<<"Avg KERNEL ComputeDerivativesKernel time: "<<totalTimeDK/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg KERNEL u_v_avgKernel time: "<<totalTimeUVAK/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg KERNEL u_v_updateKernel time: "<<totalTimeUVK/(count+1)<<" [ms]"<<std::endl;
+				std::cout<<"Avg KERNEL u_v_avgKernel time: "<<totalTimeUVAK/iterations/(count+1)<<" [ms]"<<std::endl;
+				std::cout<<"Avg KERNEL u_v_updateKernel time: "<<totalTimeUVK/iterations/(count+1)<<" [ms]"<<std::endl;
 				std::cout<<std::endl;
-				std::cout<<"Avg time: "<<totalTimeM/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg Derivatives time: "<<totalTimeD/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg u_v_avg time: "<<totalTimeUVA/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg u_v time: "<<totalTimeUV/(count+1)<<" [ms]"<<std::endl;
+				std::cout<<"Avg time: "<<totalTimeM/iterations/(count+1)<<" [ms]"<<std::endl;
+				std::cout<<"Avg Derivatives time: "<<totalTimeD/iterations/(count+1)<<" [ms]"<<std::endl;
+				std::cout<<"Avg u_v_avg time: "<<totalTimeUVA/iterations/(count+1)<<" [ms]"<<std::endl;
+				std::cout<<"Avg u_v time: "<<totalTimeUV/iterations/(count+1)<<" [ms]"<<std::endl;
 
 				break;
 			}
