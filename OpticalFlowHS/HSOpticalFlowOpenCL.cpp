@@ -788,7 +788,8 @@ int HSOpticalFlowOpenCL::run()
 		std::cout<<"Avg KERNEL u_v_avgKernel time: "<<totalTimeUVAK/iterations<<" [ms]"<<std::endl;
 		std::cout<<"Avg KERNEL u_v_updateKernel time: "<<totalTimeUVK/iterations<<" [ms]"<<std::endl;
 		std::cout<<std::endl;
-		std::cout<<"Avg time: "<<double(totalTimeDK + totalTimeM)/iterations<<" [ms]"<<std::endl;
+		std::cout<<"Total time: "<<double(totalTimeM)<<" [ms]"<<std::endl;
+		std::cout<<"Avg time: "<<double(totalTimeM)/iterations<<" [ms]"<<std::endl;
 		std::cout<<"Derivatives time: "<<totalTimeD<<" [ms]"<<std::endl;
 		std::cout<<"Avg u_v_avg time: "<<totalTimeUVA/iterations<<" [ms]"<<std::endl;
 		std::cout<<"Avg u_v time: "<<totalTimeUV/iterations<<" [ms]"<<std::endl;
@@ -876,6 +877,7 @@ int HSOpticalFlowOpenCL::run()
 				std::cout<<"Avg KERNEL u_v_avgKernel time: "<<totalTimeUVAK/iterations/(count+1)<<" [ms]"<<std::endl;
 				std::cout<<"Avg KERNEL u_v_updateKernel time: "<<totalTimeUVK/iterations/(count+1)<<" [ms]"<<std::endl;
 				std::cout<<std::endl;
+				std::cout<<"Total time: "<<double(totalTimeM)<<" [ms]"<<std::endl;
 				std::cout<<"Avg time: "<<totalTimeM/iterations/(count+1)<<" [ms]"<<std::endl;
 				std::cout<<"Avg Derivatives time: "<<totalTimeD/iterations/(count+1)<<" [ms]"<<std::endl;
 				std::cout<<"Avg u_v_avg time: "<<totalTimeUVA/iterations/(count+1)<<" [ms]"<<std::endl;
