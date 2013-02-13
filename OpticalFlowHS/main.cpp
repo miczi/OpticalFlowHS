@@ -9,17 +9,17 @@ void runCVCamera(int argc, char * argv[]);
 int argccld = 10;
 char* argvcld[10] = {"null", "-cl", "-hd", "city_1.jpg", "city_2.jpg", "city_cl_out.jpg", "15", "10", "1", "GPU"};
 int argcclc = 7;
-char* argvclc[7] = {"null", "-cl", "-cam", "15", "10", "1", "GPU"};
+char* argvclc[7] = {"null", "-cl", "-cam", "50", "500", "8", "CPU"};
 int argccvd = 8;
 char* argvcvd[8] = {"null", "-cv", "-hd", "city_1.jpg", "city_2.jpg", "city_cv_out.jpg", ".1", "10"};
 int argccvc = 5;
-char* argvcvc[5] = {"null", "-cv", "-cam", ".1", "10"};
+char* argvcvc[5] = {"null", "-cv", "-cam", ".05", "500"};
 
 int	main(int argc, char * argv[])
 {
 	//runCLDisk(argccld, argvcld);
-	//runCLCamera(argcclc, argvclc);
-	runCVDisk(argccvd, argvcvd);	
+	//runCVDisk(argccvd, argvcvd);	
+	runCLCamera(argcclc, argvclc);
 	//runCVCamera(argccvc, argvcvc);
 	getchar();
 	return 0;
