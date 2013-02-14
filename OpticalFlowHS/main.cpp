@@ -1,25 +1,31 @@
 #include "HSOpticalFlowOpenCL.hpp"
 #include "OpticalFlowOpenCV.hpp"
 
+#define	ITERATIONS "20"
+#define	ALPHA "15"
+#define	UNIT_WORK_SIZE "64"
+#define	UNIT_TYPE "GPU"
+#define	LAMBDA ".1"
+
 void runCLDisk(int argc, char * argv[]);
 void runCLCamera(int argc, char * argv[]);
 void runCVDisk(int argc, char * argv[]);
 void runCVCamera(int argc, char * argv[]);
 
 int argccld = 10;
-char* argvcld[10] = {"null", "-cl", "-hd", "city_1.jpg", "city_2.jpg", "city_cl_out.jpg", "15", "10", "1", "GPU"};
+char* argvcld[10] = {"null", "-cl", "-hd", "city_1.jpg", "city_2.jpg", "city_cl_out.jpg", ALPHA, ITERATIONS, UNIT_WORK_SIZE, UNIT_TYPE};
 int argcclc = 7;
-char* argvclc[7] = {"null", "-cl", "-cam", "50", "500", "8", "CPU"};
+char* argvclc[7] = {"null", "-cl", "-cam", ALPHA, ITERATIONS, UNIT_WORK_SIZE, UNIT_TYPE};
 int argccvd = 8;
-char* argvcvd[8] = {"null", "-cv", "-hd", "city_1.jpg", "city_2.jpg", "city_cv_out.jpg", ".1", "10"};
+char* argvcvd[8] = {"null", "-cv", "-hd", "city_1.jpg", "city_2.jpg", "city_cv_out.jpg", LAMBDA, ITERATIONS};
 int argccvc = 5;
-char* argvcvc[5] = {"null", "-cv", "-cam", ".05", "500"};
+char* argvcvc[5] = {"null", "-cv", "-cam", LAMBDA, ITERATIONS};
 
 int	main(int argc, char * argv[])
 {
-	//runCLDisk(argccld, argvcld);
-	//runCVDisk(argccvd, argvcvd);	
-	runCLCamera(argcclc, argvclc);
+	runCLDisk(argccld, argvcld);
+	runCVDisk(argccvd, argvcvd);	
+	//runCLCamera(argcclc, argvclc);
 	//runCVCamera(argccvc, argvcvc);
 	getchar();
 	return 0;

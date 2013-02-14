@@ -420,25 +420,19 @@ clSetKernelArg(
 
 	
 	long long start, end;
-	double total;
 
 	status = clGetEventProfilingInfo(events[0], CL_PROFILING_COMMAND_START,
 		sizeof start, &start, NULL);
 	if (status != CL_SUCCESS) {
-		std::cout<<"clGetEventProfilingInfo(COMMAND_START) failed: %s\n";
+		std::cout<<"clGetEventProfilingInfo(COMMAND_START) failed: "<< status <<"\n";
 		start = 0;
 	}
 	status = clGetEventProfilingInfo(events[0], CL_PROFILING_COMMAND_END,
 		sizeof end, &end, NULL);
 	if (status != CL_SUCCESS) {
-		std::cout<<"clGetEventProfilingInfo(COMMAND_END) failed: %s\n";
+		std::cout<<"clGetEventProfilingInfo(COMMAND_END) failed: "<< status <<"\n";
 		end = 0;
 	}
-
-	total = (double)(end - start) / 1e6; /* Convert nanoseconds to msecs */
-	//printf("DER: Total kernel time was %5.3f msecs.\n", total);
-	totalTimeDK = totalTimeDK + total;
-	totalTime = totalTime + total;
 
 	clEnqueueReadBuffer(
 		commandQueue,
@@ -472,12 +466,6 @@ clSetKernelArg(
 		0,
 		NULL,
 		&events[0]);
-
-
-
-
-	t2 = t2 + GetTickCount() - t1;
-	totalTimeD = totalTimeD + double(t2);
 
 	// END DERIVATES
 
@@ -566,8 +554,7 @@ int HSOpticalFlowOpenCL::runCLKernels()
 	clWaitForEvents(1, &events[0]);
 
 	long long start, end;
-	double total;
-
+	
 	status = clGetEventProfilingInfo(events[0], CL_PROFILING_COMMAND_START,
 		sizeof start, &start, NULL);
 	if (status != CL_SUCCESS) {
@@ -581,19 +568,7 @@ int HSOpticalFlowOpenCL::runCLKernels()
 		end = 0;
 	}
 
-	total = (double)(end - start) / 1e6; /* Convert nanoseconds to msecs */
-	//printf("u_v_avgKernel: Total kernel time was %5.3f msecs.\n", total);
-	totalTimeUVAK = totalTimeUVAK + total;
-	totalTime = totalTime + total;
-
-	t2 = t2 + GetTickCount() - t1;
-	totalTimeUVA = totalTimeUVA + double(t2);
-
 	// u_v_avgKernel end
-
-	t1 = 0;
-	t2 = 0;
-	t1 = GetTickCount();
 
 	// u_v_updateKernel start
 
@@ -677,11 +652,6 @@ int HSOpticalFlowOpenCL::runCLKernels()
 		end = 0;
 	}
 
-	total = (double)(end - start) / 1e6; /* Convert nanoseconds to msecs */
-	//printf("u_v_avgKernel: Total kernel time was %5.3f msecs.\n", total);
-	totalTimeUVK =  totalTimeUVK + total;
-	totalTime = totalTime + total;
-
 	clEnqueueReadBuffer(
 		commandQueue,
 		uBuffer,
@@ -703,12 +673,6 @@ int HSOpticalFlowOpenCL::runCLKernels()
 		0,
 		NULL,
 		&events[0]);
-
-	t2 = t2 + GetTickCount() - t1;
-	totalTimeUV = totalTimeUV + double(t2);
-	//std::cout<<"totalTimeUV "<<GetTickCount()<<"\n";
-
-	totalTimeM = totalTime + totalTimeD + totalTimeUV + totalTimeUVA;
 
 	clReleaseEvent(events[0]);
 	return SDK_SUCCESS;
@@ -741,13 +705,16 @@ int HSOpticalFlowOpenCL::initialize()
 
 int HSOpticalFlowOpenCL::run()
 {
-	int count = 0;
+	int count = 1;
 	if(!byteRWSupport)
 		return SDK_SUCCESS;
 
 	/* create and initialize timers */
 	int timer = sampleCommon->createTimer();
 	sampleCommon->resetTimer(timer);
+	
+	DWORD mt1 = 0;
+	DWORD mt2 = 0;
 
 	if (strcmp(src, "-hd") == 0)
 	{
@@ -778,21 +745,14 @@ int HSOpticalFlowOpenCL::run()
 		std::cout<<"po setupCL\n";
 		edge = cvCreateImage(cvSize(image->width,image->height), IPL_DEPTH_8U, 1);
 
+		mt1 = GetTickCount();
 		runDerivatives();	
 		for (int i = 0; i < iterations; i++)
 			runCLKernels();
+		mt2 = mt2 + GetTickCount() - mt1;
 
 
-		std::cout<<"Avg KERNEL time: "<<(totalTimeDK + totalTimeUVAK + totalTimeUVK)/iterations<<" [ms]"<<std::endl;
-		std::cout<<"KERNEL ComputeDerivativesKernel time: "<<totalTimeDK<<" [ms]"<<std::endl;
-		std::cout<<"Avg KERNEL u_v_avgKernel time: "<<totalTimeUVAK/iterations<<" [ms]"<<std::endl;
-		std::cout<<"Avg KERNEL u_v_updateKernel time: "<<totalTimeUVK/iterations<<" [ms]"<<std::endl;
-		std::cout<<std::endl;
-		std::cout<<"Total time: "<<double(totalTimeM)<<" [ms]"<<std::endl;
-		std::cout<<"Avg time: "<<double(totalTimeM)/iterations<<" [ms]"<<std::endl;
-		std::cout<<"Derivatives time: "<<totalTimeD<<" [ms]"<<std::endl;
-		std::cout<<"Avg u_v_avg time: "<<totalTimeUVA/iterations<<" [ms]"<<std::endl;
-		std::cout<<"Avg u_v time: "<<totalTimeUV/iterations<<" [ms]"<<std::endl;
+		std::cout<<"Avg time: "<<double(mt2)<<" [ms]"<<std::endl;
 
 
 		IplImage* imgFlow = cvCreateImage(cvSize(image->width,image->height), IPL_DEPTH_8U,  3);
@@ -849,9 +809,11 @@ int HSOpticalFlowOpenCL::run()
 
 			readInputFrame(&inputImageData2);
 
+			mt1 = GetTickCount();
 			runDerivatives();	
 			for (int i = 0; i < iterations; i++)
-			runCLKernels();
+				runCLKernels();
+			mt2 = mt2 + GetTickCount() - mt1;
 
 			IplImage* imgFlow = cvCreateImage(cvSize(image->width,image->height), IPL_DEPTH_8U,  3);
 			cvZero(imgFlow);
@@ -873,16 +835,7 @@ int HSOpticalFlowOpenCL::run()
 
 			if( cvWaitKey(10) == 27 ){
 
-				std::cout<<"Avg KERNEL ComputeDerivativesKernel time: "<<totalTimeDK/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg KERNEL u_v_avgKernel time: "<<totalTimeUVAK/iterations/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg KERNEL u_v_updateKernel time: "<<totalTimeUVK/iterations/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<std::endl;
-				std::cout<<"Total time: "<<double(totalTimeM)<<" [ms]"<<std::endl;
-				std::cout<<"Avg time: "<<totalTimeM/iterations/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg Derivatives time: "<<totalTimeD/iterations/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg u_v_avg time: "<<totalTimeUVA/iterations/(count+1)<<" [ms]"<<std::endl;
-				std::cout<<"Avg u_v time: "<<totalTimeUV/iterations/(count+1)<<" [ms]"<<std::endl;
-
+				std::cout<<"Avg time: "<<double(mt2/count)<<" [ms]"<<std::endl;
 				break;
 			}
 			count++;

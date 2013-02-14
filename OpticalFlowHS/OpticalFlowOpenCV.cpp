@@ -46,7 +46,7 @@ int OpticalFlowOpenCV::runFromImg(char* input1, char* input2, char* output, floa
 	}
 	cvSaveImage(output, imgFlow);
 	
-	std::cout<<"Avg kernel time: "<<double(t2)<<" [ms]"<<std::endl;	
+	std::cout<<"Avg time: "<<double(t2)<<" [ms]"<<std::endl;	
 
 	return 0;
 }  
@@ -119,7 +119,7 @@ int OpticalFlowOpenCV::runFromCamera(float lambda, int it)
 		
 		if( cvWaitKey(10) == 27 )
 		{
-			std::cout<<"Avg kernel time: "<<double(t2/count)<<" [ms]"<<std::endl;	
+			std::cout<<"Avg time: "<<double(t2/count)<<" [ms]"<<std::endl;	
 			break;
 		}
 		count++;
