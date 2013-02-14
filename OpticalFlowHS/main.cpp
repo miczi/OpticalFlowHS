@@ -23,12 +23,13 @@ char* argvcvc[5] = {"null", "-cv", "-cam", LAMBDA, ITERATIONS};
 
 int	main(int argc, char * argv[])
 {
+	//konfiguracja uruchomieniowa testow
 	//runCLDisk(argccld, argvcld);
 	//runCVDisk(argccvd, argvcvd);	
 	//runCLCamera(argcclc, argvclc);
-	runCVCamera(argccvc, argvcvc);
-	getchar();
-	return 0;
+	//runCVCamera(argccvc, argvcvc);
+	//getchar();
+	//return 0;
 
 	if (argc == 1){
 		std::cout<<"Nie zostaly podane zadne parametry do funkcji main.\nKoncze dzialanie!\n";
