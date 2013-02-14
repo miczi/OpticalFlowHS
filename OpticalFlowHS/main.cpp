@@ -1,9 +1,9 @@
 #include "HSOpticalFlowOpenCL.hpp"
 #include "OpticalFlowOpenCV.hpp"
 
-#define	ITERATIONS "20"
+#define	ITERATIONS "100"
 #define	ALPHA "15"
-#define	UNIT_WORK_SIZE "64"
+#define	UNIT_WORK_SIZE "1"
 #define	UNIT_TYPE "GPU"
 #define	LAMBDA ".1"
 
@@ -23,10 +23,10 @@ char* argvcvc[5] = {"null", "-cv", "-cam", LAMBDA, ITERATIONS};
 
 int	main(int argc, char * argv[])
 {
-	runCLDisk(argccld, argvcld);
-	runCVDisk(argccvd, argvcvd);	
+	//runCLDisk(argccld, argvcld);
+	//runCVDisk(argccvd, argvcvd);	
 	//runCLCamera(argcclc, argvclc);
-	//runCVCamera(argccvc, argvcvc);
+	runCVCamera(argccvc, argvcvc);
 	getchar();
 	return 0;
 
